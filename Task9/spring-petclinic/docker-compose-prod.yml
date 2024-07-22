@@ -10,16 +10,14 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-    ports:
-      - "3011:5432"
     volumes:
       - postgres-volume:/var/lib/postgresql/data
+    ports:
+      - "3007:5432"
   app:
     build:
       context: .
       target: prod
-    ports:
-      - "3012:8080"
     environment:
       - POSTGRES_USER=petclinic
       - POSTGRES_PASSWORD=petclinic
