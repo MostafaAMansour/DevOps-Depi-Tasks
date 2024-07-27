@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  load_balancer:
+    image: nginx:latest
+    volumes:
+      - /home/mostafa_abdallah/node-hello/conf.d:/etc/nginx/conf.d/
+    ports:
+      - 3013:80
+    depends_on:
+      - app
+

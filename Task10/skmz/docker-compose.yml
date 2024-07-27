@@ -1,0 +1,32 @@
+version: "3.7"
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    environment:
+      profile: prod
+
+  db:
+    image: mongo:4.2.2
+    environment:
+      MONGO_INITDB_DATABASE: programmers
+    volumes:
+      - ./server/db/mongo.init:/docker-entrypoint-initdb.d/mongo-init.js
+
+  load_balancer:
+    image: nginx:latest
+    volumes:
+      - /home/mostafa_abdallah/skmz/conf.d:/etc/nginx/conf.d/
+    ports:
+      - 3012:80
+    depends_on:
+      - app
