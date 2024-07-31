@@ -43,6 +43,9 @@ services:
       - elasticsearch
     networks:
       - elastic
+    #environment:
+    #  ELASTICSEARCH_HOSTS: http://es:9200
+
 networks:
   elastic:
     driver: bridge
