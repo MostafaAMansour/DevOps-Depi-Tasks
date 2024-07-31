@@ -1,40 +1,58 @@
-**Docker mysql master slave replica
-**
+## Compose sample application
+### Elasticsearch, Logstash, and Kibana (ELK) in single-node
 
-docker create network mysql-replica
+Project structure:
+```
+.
+└── compose.yaml
+```
 
-docker run --name mysql-replic --network mysql-replica -p 3016:3306 --env MYSQL_ROOT_PASSWORD=root --env MYSQL_DATABASE=radda --env MYSQ_USER=radda --env MYSQL_PASSWORD=radda --env MYSQLD_SAFE_ARGS="--plugin-load-add=mysql_native_password.so" -d mysql:8.3
+[_compose.yaml_](compose.yaml)
+```
+services:
+  elasticsearch:
+    image: elasticsearch:7.8.0
+    ...
+  logstash:
+    image: logstash:7.8.0
+    ...
+  kibana:
+    image: kibana:7.8.0
+    ...
+```
 
-docker run --name mysql-source --network mysql-replica -p 3015:3306 --env MYSQL_ROOT_PASSWORD=root --env MYSQL_DATABASE=radda --env MYSQ_USER=radda --env MYSQL_PASSWORD=radda --env MYSQLD_SAFE_ARGS="--plugin-load-add=mysql_native_password.so" -d mysql:8.3
+## Deploy with docker compose
 
-Source commands using mysql_native_password as a plugin
+```
+$ docker compose up -d
+Creating network "elasticsearch-logstash-kibana_elastic" with driver "bridge"
+Creating es ... done
+Creating log ... done
+Creating kib ... done
+```
 
-docker exec -it mysql-source bash
-mysql -u root -p
+## Expected result
 
-ALTER USER 'replica_user'@'%' IDENTIFIED WITH mysql_native_password BY 'replica_password';
-GRANT REPLICATION SLAVE ON *.* TO 'replica_user'@'%' IDENTIFIED BY 'replica_password';
-FLUSH PRIVILEGES;
-FLUSH TABLES WITH READ LOCK;
-UNLOCK TABLES;
-SHOW MASTER STATUS;
-in my.cnf add in [mysqld]
-server_id = 1
+Listing containers must show three containers running and the port mapping as below:
+```
+$ docker ps
+CONTAINER ID        IMAGE                 COMMAND                  CREATED             STATUS                    PORTS                                                                                            NAMES
+173f0634ed33        logstash:7.8.0        "/usr/local/bin/dock…"   43 seconds ago      Up 41 seconds             0.0.0.0:5000->5000/tcp, 0.0.0.0:5044->5044/tcp, 0.0.0.0:9600->9600/tcp, 0.0.0.0:5000->5000/udp   log
+b448fd3e9b30        kibana:7.8.0          "/usr/local/bin/dumb…"   43 seconds ago      Up 42 seconds             0.0.0.0:5601->5601/tcp                                                                           kib
+366d358fb03d        elasticsearch:7.8.0   "/tini -- /usr/local…"   43 seconds ago      Up 42 seconds (healthy)   0.0.0.0:9200->9200/tcp, 0.0.0.0:9300->9300/tcp                                                   es
+```
 
+After the application starts, navigate to below links in your web browser:
 
-docker restart mysql-source
+* Elasticsearch: [`http://localhost:9200`](http://localhost:9200)
+* Logstash: [`http://localhost:9600`](http://localhost:9600)
+* Kibana: [`http://localhost:5601/api/status`](http://localhost:5601/api/status)
 
-Replic commands using mysql_native_password as a plugin
+Stop and remove the containers
+```
+$ docker compose down
+```
 
-docker exec -it mysql-replic bash
-mysql -u root -p
-STOP SLAVE;
-CHANGE MASTER TO MASTER_HOST='mysql-master', MASTER_USER='replica_user', MASTER_PASSWORD='replica_password', MASTER_LOG_FILE='xxxx.xxxxx', MASTER_LOG_POS=position_number; //found in MASTER STATUS
-in my.cnf add in [mysqld]
-server_id = 2
+## Attribution
 
-docker restart mysql-replic
-
-START SLAVE;
-SHOW SLAVE STATUS\G;
-
+The [example Nginx logs](https://github.com/docker/awesome-compose/tree/master/elasticsearch-logstash-kibana/logstash/nginx.log) are copied from [here](https://github.com/elastic/examples/blob/master/Common%20Data%20Formats/nginx_json_logs/nginx_json_logs).
