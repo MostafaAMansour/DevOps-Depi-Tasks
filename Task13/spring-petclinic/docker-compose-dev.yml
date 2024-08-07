@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:latest
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 --password="root" --silent']
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    environment:
+      - MYSQL_USER=petclinic
+      - MYSQL_PASSWORD=petclinic
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=petclinic
+    volumes:
+      - mysql-volume:/var/lib/mysql
+    ports:
+      - "3007:3306"
+  app:
+    build:
+      context: .
+      target: dev
+    image: "mostafaamansour/spring-petclinic-mysql:latest"
+    environment:
+      - MYSQL_URL=jdbc:mysql://db:3306/petclinic
+      - SPRING_PROFILES_ACTIVE=mysql
+volumes:
+  mysql-volume:
