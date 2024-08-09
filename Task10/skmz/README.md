@@ -1,109 +1,91 @@
-SKMZ [![Build Status](https://travis-ci.com/Shpota/skmz.svg?branch=master)](https://travis-ci.com/Shpota/skmz) [![](https://img.shields.io/codecov/c/github/Shpota/skmz?color=green&logo=test%20coverage)](https://codecov.io/gh/Shpota/skmz)
-====
+# SKMZ Application
 
-A web application that allows to query programmers
-with their skills via a **GraphQL** API. The
-application is implemented with **Go** and 
-**[gqlgen](https://github.com/99designs/gqlgen)**
-on the backend side and **React** on the front end
-side. **MongoDB** is used as a database.
+## Overview
 
-![Showcase](showcase.gif)
+This application showcases the SKMZ service using Docker Compose with a MongoDB database and a load balancer. The Docker setup includes building a Node.js and Go application with Docker Compose orchestration.
 
+## Prerequisites
 
-## System requirements
-You need to have [Docker](https://www.docker.com) and
-[Docker Compose](https://docs.docker.com/compose/)
-installed in oder to build and run the project. No
-additional tools required.
+- **Docker**: Ensure Docker is installed.
+- **Docker Compose**: Required for setting up and managing multi-container applications.
+- **SKMZ Codebase**: Ensure the SKMZ application code is available.
 
-## How to build and run in production mode
-Perform 
-```sh
-docker-compose up
+## Instructions
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` file is used to set up the SKMZ application with a MongoDB database and a load balancer.
+
+```yaml
+# docker-compose.yml
+version: "3.7"
+
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    environment:
+      profile: prod
+
+  db:
+    image: mongo:4.2.2
+    environment:
+      MONGO_INITDB_DATABASE: programmers
+    volumes:
+      - ./server/db/mongo.init:/docker-entrypoint-initdb.d/mongo-init.js
+
+  load_balancer:
+    image: nginx:latest
+    volumes:
+      - ./skmz/conf.d:/etc/nginx/conf.d/
+    ports:
+      - 3012:80
+    depends_on:
+      - app
 ```
-Access the application via http://localhost:8080.
-Access the GraphQL Playground using 
-http://localhost:8080/playground.
 
-## How to develop locally
+### Explanation
 
-**Tools**
+- `app`: Builds and runs the SKMZ application, which depends on the MongoDB database. Configured to deploy with multiple replicas and restart policies.
+- `db`: Runs a MongoDB container with initialization scripts provided through a volume.
+- `load_balancer`: Uses Nginx to balance traffic across application instances.
 
-In order to develop the app locally the following
-tools are required: [Docker](https://docs.docker.com/),
-[Docker Compose](https://docs.docker.com/compose/) (if you
-are on Mac or Windows it comes installed with Docker), 
-[Node.js](https://nodejs.org/en/) and
-[Go](https://golang.org/dl/).
+### Dockerfile
 
-Verify if your environment is ready by running the
-following 4 commands:
+The Dockerfile builds the SKMZ application, which includes Node.js and Go components.
 
-```sh
-docker --version
-docker-compose --version
-npm --version
-go version
+```Dockerfile
+
+# Dockerfile
+FROM node:12.14 AS JS_BUILD
+COPY webapp /webapp
+WORKDIR webapp
+RUN npm install && npm run build --prod
+
+FROM golang:1.13.6-alpine AS GO_BUILD
+COPY server /server
+WORKDIR /server
+RUN apk add build-base
+RUN go build -o /go/bin/server
+
+FROM alpine:3.11
+COPY --from=JS_BUILD /webapp/build* ./webapp/
+COPY --from=GO_BUILD /go/bin/server ./
+CMD ./server
+
 ```
 
-**Start the dev DB**
-```sh
-docker-compose -f docker-compose-dev.yml up
-```
-This will start a local MongoDB which will be
-accessible on port `27017`. The DB will
-be populated with test records from 
-[mongo.init](server/db/mongo.init).
+### Explanation
 
-**Start the server**
-
-Navigate to the `/server` folder and execute:
-
-```sh
-go run server.go
-```
-This will compile and run the back end part.
-As a result, the API and [the GraphQL
-playground](http://localhost:8080/playground)
-will be available.
-
-**Start the Front End dev server**
-
-Navigate to the `/webapp` folder and execute
-the following commands:
-
-```sh
-npm install
-npm start
-```
-As a result, the web site will be accessible
-on http://localhost:3000.
-
-The changes on the front end side will be automatically
-applied once a file is saved. The changes in the back
-end code require restarting the back end.
-
-## Customizations
-
-The database starts with a preloaded set of data which
-can be customized in 
-[the mongo.init file](server/db/mongo.init).
-
-Here is an example of a GraphQL query which can be
-run in [the Playground](http://localhost:8080/playground):
-```graphql
-query {
-  programmers(skill: "go") { 
-    name,
-    picture,
-    title,
-    company,
-    skills {
-      name,
-      icon,
-      importance
-    }
-  }
-}
-```
+`JS_BUILD`: Builds the Node.js application by copying and building the web application.
+`GO_BUILD`: Builds the Go application by copying the server code and building it.
+`alpine`: Final runtime image that includes the built applications from the previous stages.

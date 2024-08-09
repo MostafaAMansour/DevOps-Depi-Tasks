@@ -35,7 +35,7 @@ services:
   load_balancer:
     image: nginx:latest
     volumes: 
-      - /home/mostafa_abdallah/spring-petclinic/conf.d:/etc/nginx/conf.d/
+      - ./conf.d:/etc/nginx/conf.d/
     ports:
       - 3011:80
     depends_on:
