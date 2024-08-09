@@ -59,5 +59,5 @@ Finally, list the contents of `test_dir` to ensure that `test2` has been removed
 ls
 ```
 
-Summary
+##Summary
 In this task, you've practiced basic Linux commands that include creating and navigating directories, creating and removing files, and listing directory contents. These are foundational skills that will help you work more effectively in a Linux environment, whether you're managing files, writing scripts, or deploying applications.
