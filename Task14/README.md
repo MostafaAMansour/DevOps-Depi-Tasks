@@ -12,13 +12,13 @@ To set up Jenkins with Docker in Docker (DinD) support, follow these steps:
 
 Create a Dockerfile with the following content:
 
-\`\`\`dockerfile
+```dockerfile
 FROM jenkins/jenkins:latest
 USER root
 RUN apt update && curl -fsSL https://get.docker.com | sh
 RUN usermod -aG docker jenkins
 USER jenkins
-\`\`\`
+```
 
 ### Explanation
 
@@ -32,9 +32,9 @@ USER jenkins
 
 Run the Jenkins container using the following command:
 
-\`\`\`bash
+```bash
 docker run -dit --restart=always -p 8081:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock --name jenkins --group-add 999 jenkinsagent
-\`\`\`
+```
 
 ### Explanation
 
@@ -65,9 +65,9 @@ To automatically trigger Jenkins jobs using a GitHub webhook, follow these steps
 
 Use ngrok to expose Jenkins to the public internet temporarily:
 
-\`\`\`bash
+```bash
 ngrok http 8081
-\`\`\`
+```
 
 ### Explanation
 
@@ -106,9 +106,9 @@ To create and configure a Jenkins agent on a Windows machine, follow these steps
    - Navigate to the directory where `agent.jar` is downloaded.
    - Run the following command:
 
-\`\`\`bash
-java -jar agent.jar -jnlpUrl <JENKINS_URL>/computer/<AGENT_NAME>/slave-agent.jnlp -secret <SECRET> -workDir "C:\jenkins"
-\`\`\`
+```bash
+java -jar agent.jar -jnlpUrl <JENKINS_URL>/computer/<AGENT_NAME>/slave-agent.jnlp -secret <SECRET> -workDir "C:jenkins"
+```
 
 ### Explanation
 
