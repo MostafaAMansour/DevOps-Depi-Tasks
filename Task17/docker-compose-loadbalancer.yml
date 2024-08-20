@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:latest
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 --password="root" --silent']
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    environment:
+      - MYSQL_USER=petclinic
+      - MYSQL_PASSWORD=petclinic
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=petclinic
+    volumes:
+      - mysql-volume:/var/lib/mysql
+  app:
+    build:
+      context: .
+      target: dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - MYSQL_URL=jdbc:mysql://db:3306/petclinic
+      - SPRING_PROFILES_ACTIVE=mysql
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  load_balancer:
+    image: nginx:latest
+    volumes: 
+      - /home/mostafa_abdallah/spring-petclinic/conf.d:/etc/nginx/conf.d/
+    ports:
+      - 3011:80
+    depends_on:
+      - app
+volumes:
+  mysql-volume:
+
