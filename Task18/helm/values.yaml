@@ -1,0 +1,51 @@
+appName: spring-petclinic
+appPort: 8080
+namespace: dev
+appDeployment:
+  profileName: SPRING_PROFILES_ACTIVE
+  profileValue: mysql
+  databaseURL: MYSQL_URL
+  replicaNumber: 3
+  initName: wait-for-mysql
+  initImage: busybox
+  image: mostafaamansour/spring-petclinic-mysql
+
+database:
+  databaseName: mysql
+  image: mysql
+  port:  3306
+  replicaNumber:  1
+  environment:
+    username: MYSQL_USER
+    password: MYSQL_PASSWORD
+    rootPassword: MYSQL_ROOT_PASSWORD
+    databaseName: MYSQL_DATABASE
+  volume:
+    name: spring-mysql-volume
+    mountPath: /var/lib/mysql
+
+databaseService:
+  name: mysql-service
+
+configmap:
+  name: configmap
+  data:
+    database_url: jdbc:mysql://mysql-service:3306/petclinic
+    database_name: petclinic
+
+secret:
+  name: secret
+  data:
+    username: cGV0Y2xpbmlj
+    password: cGV0Y2xpbmlj
+    root_password: cm9vdA==
+
+appService:
+  nodePort: 30005
+
+
+pv:
+  name: spring-mysql-pv
+
+pvc:
+  name: spring-pvc
