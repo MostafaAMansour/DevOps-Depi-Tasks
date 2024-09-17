@@ -1,0 +1,27 @@
+namespace: prod
+appDeployment:
+  profileValue: postgres
+  databaseURL: POSTGRES_URL
+
+database:
+  databaseName: postgres
+  image: postgres
+  port:  5432
+  environment:
+    username: POSTGRES_USER
+    password: POSTGRES_PASSWORD
+    rootPassword: POSTGRES_ROOT_PASSWORD
+    databaseName: POSTGRES_DB
+  volume:
+    name: spring-postgres-volume
+    mountPath: /var/lib/postgresql/data
+
+databaseService:
+  name: postgres-service
+
+configmap:
+  data:
+    database_url: jdbc:postgresql://postgres-service:5432/petclinic
+
+pv:
+  name: spring-postgres-pv

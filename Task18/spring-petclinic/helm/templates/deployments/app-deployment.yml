@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  replicas: {{ .Values.appDeployment.replicaNumber }}
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      initContainers:
+      - name: {{ .Values.appDeployment.initName }}
+        image: {{ .Values.appDeployment.initImage }}
+        command:
+          - 'sh'
+          - '-c'
+          - "until nslookup {{ .Values.databaseService.name }}.{{.Values.namespace}}.svc.cluster.local; do echo waiting for {{ .Values.database.databaseName }}; sleep 2; done;"
+      containers:
+      - name: {{ .Values.appName }}
+        image: {{ .Values.appDeployment.image }}
+        ports:
+        - containerPort: {{ .Values.appPort }}
+        env:
+        - name: {{ .Values.appDeployment.profileName }}
+          value: {{ .Values.appDeployment.profileValue }}
+        - name: {{ .Values.appDeployment.databaseURL }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configmap.name}}
+              key: database_url

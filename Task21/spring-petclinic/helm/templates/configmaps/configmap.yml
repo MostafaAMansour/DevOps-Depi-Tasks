@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name }}
+data:
+  database_url: {{ .Values.configmap.data.database_url }}
+  database_name: {{ .Values.configmap.data.database_name }}
