@@ -5,3 +5,4 @@ metadata:
 data:
   database_url: {{ .Values.configmap.data.database_url }}
   database_name: {{ .Values.configmap.data.database_name }}
+  namespace: {{ .Values.namespace}}
